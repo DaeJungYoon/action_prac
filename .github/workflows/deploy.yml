@@ -22,7 +22,7 @@ jobs:
           # known_hosts : 원격 서버들의 지문이 저장된 파일
       - name: Add Remote Server Fingerprint to known Hosts
         run: ssh-keyscan -H -p ${{secrets.SSH_PORT}} ${{secrets.SSH_HOST}} >> ~/.ssh/known_hosts || true
-      
+
       - name: Create .env file
         run: |
           echo "DATABASE_HOST=${{ secrets.DATABASE_HOST }}" >> .env
@@ -36,9 +36,32 @@ jobs:
 
       - name: Docker Image Build
         run: docker compose build
-      
+
       - name: Login DockerHub
         run: echo '${{secrets.DOCKER_PASSWORD}}' | docker login -u '${{secrets.DOCKER_USERNAME}}' --password-stdin
-        
+
       - name: Docker Image Push
         run: docker compose push
+
+      - name: Copy .env / docker-compose.yml
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{ secrets.SSH_USERNAME}}
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          port: ${{ secrets.SSH_PORT}}
+          sourse: 'docker-compose.yml,.env'
+          target: '~/work-directory'
+
+      - name: Pull Image & Up Container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{ secrets.SSH_USERNAME}}
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          port: ${{ secrets.SSH_PORT}}
+          script: |
+            cd ~/work-directory
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
