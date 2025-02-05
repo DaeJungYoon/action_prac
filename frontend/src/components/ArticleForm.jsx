@@ -1,10 +1,10 @@
-import styles from "./ArticleForm.module.css";
-import { useState } from "react";
-import articlesApi from "../api/articlesApi";
+import styles from './ArticleForm.module.css';
+import { useState } from 'react';
+import articlesApi from '../api/articlesApi';
 
 const INITIAL_FORM_DATA = {
-  title: "",
-  content: "",
+  title: '',
+  content: '',
   file: null,
 };
 
@@ -28,7 +28,7 @@ export default function ArticleForm({ fetchArticles }) {
       fetchArticles();
       resetForm();
     } catch (error) {
-      console.error("ERROR : ", error);
+      console.error('ERROR : ', error);
     }
   };
 
@@ -41,7 +41,7 @@ export default function ArticleForm({ fetchArticles }) {
           name="title"
           value={inputData.title}
           onChange={handleFormChange}
-          placeholder="title 입력"
+          placeholder="여따가 제목목"
           className={styles.input}
         />
         <textarea
@@ -49,11 +49,11 @@ export default function ArticleForm({ fetchArticles }) {
           name="content"
           value={inputData.content}
           onChange={handleFormChange}
-          placeholder="content 입력"
+          placeholder="여기에는 내용용"
           className={styles.textarea}
         />
         <button type="submit" className={styles.button}>
-          Article 생성
+          짜잔!
         </button>
       </form>
     </div>
