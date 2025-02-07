@@ -13,11 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4.2.2
 
-      # - name: Start Message
-      #   uses: sarisia/actions-status-discord@v1
-      #   with:
-      #     webhook: ${{secrets.DISCORD_WEBHOOK}}
-      #     title: "🎇🚀 배포 시작 🎇🚀"
+      - name: Start Message
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{secrets.DISCORD_WEBHOOK}}
+          title: "🎇🚀 배포 시작 🎇🚀"
+
+      # 캐시 저장 설정을 위한 action(라이브러리)
+      - name: Cache Docker Image Layer
+      # actions/cache: 깃허브 캐시 저장소 활용을 위한 라이브러리
+        uses: actions/cache@v4.2.0
+        with:
+          path: /tmp/.buildx-cache
+          key: docker
+
 
       - name: run ssh-agent
         uses: webfactory/ssh-agent@v0.9.0
@@ -40,23 +49,40 @@ jobs:
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
 
+
+# 도커 Buildkit 엔진 설정 action(라이브러리)
+      - name: Set up Docker Buildkit
+      # setup-buildx-action
+      # -Buildkit을 설치하는 actino(라이브러리)
+      # buildx = Buildkit
+        uses: docker/setup-buildx-action@v3
+
+  # Buildkit 엔진 빌더(이미지 빌드를 도와주는 도구) 생성
+  # 기존 Docker 빌더 : Cache 파일 저장&불러오는 경로 제어 불가
+      - name: Create Buildkit 빌더
+      # 1. buildkit 빌더(buildkit)를 생성하는 명령어
+      # 2. 빌더(buildkit) 설정 명령어
+        run: |
+          docker buildx create --use --name buildkit
+          docker buildx use buildkit
+
       - name: Docker Image Build
-        run: docker compose build
+        run: docker compose build -f docker-compose-actions-cache.yml --build-arg BUILDKIT_INLINE_CACHE=1
 
       - name: Login DockerHub
         run: echo '${{secrets.DOCKER_PASSWORD}}' | docker login -u '${{secrets.DOCKER_USERNAME}}' --password-stdin
 
       - name: Docker Image Push
-        run: docker compose push
+        run: docker compose -f docker-compose-actions-cache.yml push
 
-      - name: Copy .env / docker-compose.yml
+      - name: Copy .env / docker-compose-action-cache.yml
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{secrets.SSH_HOST}}
           username: ${{ secrets.SSH_USERNAME}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
           port: ${{ secrets.SSH_PORT}}
-          source: 'docker-compose.yml,.env'
+          source: 'docker-compose-action-cache.yml,.env'
           target: '~/work-directory'
 
       - name: Pull Image & Up Container
@@ -68,19 +94,20 @@ jobs:
           port: ${{ secrets.SSH_PORT}}
           script: |
             cd ~/work-directory
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d
-      # - name: End Message - Success
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: success()
-      #   with:
-      #     webhook: ${{secrets.DISCORD_WEBHOOK}}
-      #     title: "배포 종료 - 🎉성공🎉"
+            docker-compose -f docker-compose-actions-cache.yml pull
+            docker-compose -f docker-compose-actions-cache.yml down
+            docker-compose -f docker-compose-actions-cache.yml up -d
+      
+      - name: End Message - Success
+        uses: sarisia/actions-status-discord@v1
+        if: success()
+        with:
+          webhook: ${{secrets.DISCORD_WEBHOOK}}
+          title: "배포 종료 - 🎉성공🎉"
 
-      # - name: End Message -Fail
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: failure()
-      #   with:
-      #     webhook: ${{secrets.DISCORD_WEBHOOK}}
-      #     title: "배포 종료 - 🤯실패🤯"
+      - name: End Message -Fail
+        uses: sarisia/actions-status-discord@v1
+        if: failure()
+        with:
+          webhook: ${{secrets.DISCORD_WEBHOOK}}
+          title: "배포 종료 - 🤯실패🤯"
