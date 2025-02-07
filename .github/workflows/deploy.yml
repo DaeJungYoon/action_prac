@@ -44,7 +44,7 @@ jobs:
         run: docker compose build
 
       - name: Login DockerHub
-        run: echo '${{secrets.DOCKER_PASSWORD}}' | docker login -u '${{secrets.DOCKER_USERNAME}}' --password-stdin
+        run: echo '${{secrets.DOCKER_PASSWOR}}' | docker login -u '${{secrets.DOCKER_USERNAME}}' --password-stdin
 
       - name: Docker Image Push
         run: docker compose push
@@ -82,5 +82,5 @@ jobs:
         uses: sarisia/actions-status-discord@v1
         if: failure()
         with:
-          webhook: ${{secrets.DISCORD_EBHOOK}}
+          webhook: ${{secrets.DISCORD_WEBHOOK}}
           title: "배포 종료 - 🤯실패🤯"
