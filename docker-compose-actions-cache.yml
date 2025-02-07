@@ -20,12 +20,12 @@ services:
     build: # 빌드 블록: 이미지 build 관련 설정
       context: ./backend
       cache_to:
-        - type=local,dest=/tmp/.build-cache/backend,mode=max # 여기서 local은 파일을 의미
+        - type=local,dest=/tmp/.buildx-cache/backend,mode=max # 여기서 local은 파일을 의미
         # type: 캐시의 종류
         # src: 캐시를 불러올 경로
         # src: 캐시의 저장 방식(max: 최대한 많은 캐시 데이터를 저장)
       cache_from:
-        - type=local,src=/tmp/.build-cache/backend
+        - type=local,src=/tmp/.buildx-cache/backend
 
     image: daejungyoon/backend:latest
     env_file:
@@ -44,12 +44,12 @@ services:
     build:
       context: ./frontend
       cache_to:
-        - type=local,dest=/tmp/.build-cache/frontend,mode=max # 여기서 local은 파일을 의미
+        - type=local,dest=/tmp/.buildx-cache/frontend,mode=max # 여기서 local은 파일을 의미
         # type: 캐시의 종류
         # src: 캐시를 불러올 경로
         # src: 캐시의 저장 방식(max: 최대한 많은 캐시 데이터를 저장)
       cache_from:
-        - type=local,src=/tmp/.build-cache/frontend
+        - type=local,src=/tmp/.buildx-cache/frontend
 
       args:
         VITE_API_URL: ${VITE_API_URL}
