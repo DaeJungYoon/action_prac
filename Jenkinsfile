@@ -20,7 +20,16 @@ pipeline {
               // 번외 : 읽기4 쓰기2 실행 1
 
               sh 'chmod 644 .env'
+            
             }
+          }
+        }
+      }
+      stage("Docker Image Build & Container Run"){
+        steps{
+          script{
+            sh 'docker compose buiid'
+            sh 'docker compose up -d'
           }
         }
       }
