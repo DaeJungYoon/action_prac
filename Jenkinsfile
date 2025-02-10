@@ -28,7 +28,7 @@ pipeline {
       stage("Docker Image Build & Container Run"){
         steps{
           script{
-            sh 'docker compose buiid'
+            sh 'docker compose build'
             sh 'docker compose up -d'
           }
         }
